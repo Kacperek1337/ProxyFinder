@@ -152,6 +152,8 @@ def check_proxy(proxy):
             })
             return
         except Exception:
+            pass
+        else:
             status(f'{proxy} is dead', 2)
 
 if __name__ == '__main__':
