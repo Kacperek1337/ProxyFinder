@@ -27,7 +27,7 @@ PROXY_TYPES = [
 ]
 TEST_DOMAIN = 'google.com'
 OUTPUT_JSON = 'proxies.json'
-OUTPUT_TXT_SUFFIX = '_PROXIES'
+OUTPUT_TXT_SUFFIX = 'PROXIES'
 BANNER = """
 ________                                   ______________       _________            
 ___  __ \________________  ______  __      ___  ____/__(_)____________  /____________
@@ -179,11 +179,11 @@ if __name__ == '__main__':
         status(f'Found {len(WORKING_PROXIES)} working proxies', 0)
         with open(OUTPUT_JSON, 'w') as file:
             json.dump(WORKING_PROXIES, file)
-        output_filenames = [t[2] + OUTPUT_TXT_SUFFIX for t in PROXY_TYPES]
+        output_filenames = [t[2] + '_' + OUTPUT_TXT_SUFFIX for t in PROXY_TYPES]
         output_files = [open(f, 'w') for f in output_filenames]
         for proxy in WORKING_PROXIES:
-            [f for f in output_files if f.name.startswith(proxy['Type'])][0].write(proxy['Address'] + '\n')
+            [f for f in output_files if f.name.split('_')[0] == proxy['Type']][0].write(proxy['Address'] + '\n')
         output_filenames.append(OUTPUT_JSON)
-        status('Proxies written to files: %s'%' '.join(output_filenames), 0)
+        status('Proxies written to files: %s'%', '.join(output_filenames), 0)
     except (SystemExit, KeyboardInterrupt):
         status(Fore.YELLOW + 'Exiting...' + Fore.RESET, 3)
