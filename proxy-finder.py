@@ -41,9 +41,10 @@ THREADS = []
 PROXIES = []
 WORKING_PROXIES = []
 STATUS_QUEUE = SimpleQueue()
+STATUS = True
 
 def status_printer():
-    while True:
+    while STATUS:
         print(STATUS_QUEUE.get())
 
 def status(info, level=1):
@@ -165,7 +166,7 @@ def check_proxy(proxy):
 if __name__ == '__main__':
     init()
     print(Fore.CYAN + BANNER)
-    threading.Thread(target=status_printer, daemon=True).start()
+    threading.Thread(target=status_printer).start()
     try:
         ddg = DuckDuckGo()
         status('Querying DuckDuckGo')
@@ -179,7 +180,7 @@ if __name__ == '__main__':
         join_all()
         status(f'Found {len(PROXIES)} possibly working proxies', 0)
         status('Checking proxies... It may take some time')
-        for proxy in PROXIES:
+        for proxy in PROXIES[:20]:
             Thread(target=check_proxy, args=[proxy]).start()
         join_all()
         status('Finished checking proxies')
@@ -191,6 +192,7 @@ if __name__ == '__main__':
         for proxy in WORKING_PROXIES:
             [f for f in output_files if f.name.split('_')[0] == proxy['Type']][0].write(proxy['Address'] + '\n')
         output_filenames.append(OUTPUT_JSON)
-        status('Proxies written to files: %s'%', '.join(output_filenames), 0)
     except (SystemExit, KeyboardInterrupt):
-        status(Fore.YELLOW + 'Exiting...' + Fore.RESET, 3)
+        status(Fore.YELLOW + "Exiting...", 3)
+    finally:
+        STATUS = False
