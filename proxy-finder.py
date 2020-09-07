@@ -4,9 +4,10 @@ import re
 import threading
 from sys import stdout
 
+from queue import SimpleQueue
 import requests
 from bs4 import BeautifulSoup
-from colorama import Fore, Style, init
+from colorama import Fore, Style, init, AnsiToWin32
 from fake_useragent import UserAgent
 
 MAX_THREADS = 500
@@ -39,6 +40,11 @@ _  ____/_  /   / /_/ /_>  < _  /_/ /_/_____/  __/   _  / _  / / / /_/ / /  __/  
 THREADS = []
 PROXIES = []
 WORKING_PROXIES = []
+STATUS_QUEUE = SimpleQueue()
+
+def status_printer():
+    while True:
+        print(STATUS_QUEUE.get())
 
 def status(info, level=1):
     levels = {
@@ -47,7 +53,7 @@ def status(info, level=1):
         2: Fore.YELLOW + "[-]",
         3: Fore.RED + "[!]"
     }
-    stdout.write(Style.BRIGHT + levels.get(level) + Style.RESET_ALL + ' ' + info + '\n')
+    STATUS_QUEUE.put(Style.BRIGHT + levels.get(level) + Style.RESET_ALL + ' ' + info)
 
 def catch_exception(func):
     @functools.wraps(func)
@@ -118,7 +124,7 @@ class Thread(threading.Thread):
 
     def __init__(self, *args, **kwargs):
         THREADS.append(self)
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, daemon=True)
 
     def __del__(self):
         THREADS.remove(self)
@@ -158,7 +164,8 @@ def check_proxy(proxy):
 
 if __name__ == '__main__':
     init()
-    print(Fore.CYAN + BANNER + Fore.RESET)
+    print(Fore.CYAN + BANNER)
+    threading.Thread(target=status_printer, daemon=True).start()
     try:
         ddg = DuckDuckGo()
         status('Querying DuckDuckGo')
